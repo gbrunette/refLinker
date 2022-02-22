@@ -1,0 +1,12 @@
+README.md
+setup.py
+linker.egg-info/PKG-INFO
+linker.egg-info/SOURCES.txt
+linker.egg-info/dependency_links.txt
+linker.egg-info/requires.txt
+linker.egg-info/top_level.txt
+scripts/compare_hic_10x_haplotype_single_chr.py
+scripts/energy_statistics.py
+scripts/extract_coverage_from_vcf.py
+scripts/remove_centromere_variants_vcf.py
+scripts/remove_low_quality_spin_variants.py
