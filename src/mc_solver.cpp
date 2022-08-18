@@ -53,228 +53,77 @@ void solver_recursive( std::unordered_map<std::string,variant_node>& var_dict, c
         }
         //set_switch_energy(pdict,flip_maxima);   /// create a new haplotype block class and find the segments
 };
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-// void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix ) {
-//     /*
-// 	for (int i = 0; i < pdict.num_paired; i++) {
-//         std::string ref_string = pdict.ref_handle[i];
-//         std::string alt_string = pdict.alt_handle[i];
-//         //std::cout << het_string << std::endl;
-//         std::cout << "ref_count" << "\t" << var_dict[ref_string].base_dict[ref_string.back()] << "\t" << "alt_count" << "\t" << \
-//         var_dict[alt_string].base_dict[alt_string.back()] << std::endl;
 
-//     }
-// */
-//     int t = clock();
-//     int max_loop = 10000;
-// 	int ranges = 100;
-// 	int range0 = 50;
-// 	int range1 = 25;
-// 	int range2 = 10;
-// 	int range3 = 5;
-// 	int range4 = 2;
-// 	int prior, prior_prior;
-//     static const std::size_t length = pdict.num_paired;
-//     cout << "========" << endl;
-//     cout << "monte carlo solver: " << endl;
-    
-// 	for (int i = 0; i < 20; i++) {
-//         cout << "global loop:" << "\t" << i << endl;
-//         //switchE_recursive( pdict, num_matrix ); 
-//         switchE_recursive_pop( pdict, num_matrix, 4e5, diff_matrix );       
-//     }
-
-//     prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < max_loop; i++ ) {
-//         cout << "5e6 loop:" << "\t" << i << endl;
-//         block_flip_recursive_pop( pdict, num_matrix, 5e6, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-
-//         else {i = max_loop;}
-//         if (prior == 0) { i = max_loop; }
-//     }
-
-//     prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < max_loop; i++ ) {
-//         cout << "1e6 loop:" << "\t" << i << endl;
-//         block_flip_recursive_pop( pdict, num_matrix, 1e6, 4e5, prior, diff_matrix );
-//         //block_flip_fast( pdict, num_matrix, 5e4, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else {i = max_loop;}
-//         if (prior == 0) { i = max_loop; }
-//     }
-
-//     for (int i = 0; i < max_loop; i++ ) {
-//         cout << "500 var loop:" << "\t" << i << endl;
-//         block_flip_recursive_var_range( pdict, num_matrix, 500, prior, 4e5, diff_matrix );
-//         //block_flip_fast( pdict, num_matrix, 5e4, 4e5, prior, diff_matrix );
-        
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else { i = max_loop; }
-//         if (prior == 0) { i = max_loop; }
-        
-//     }
-
-//     prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < max_loop; i++ ) {
-//         cout << "100 var loop:" << "\t" << i << endl;
-//         block_flip_recursive_var_range( pdict, num_matrix, 100, prior, 4e5, diff_matrix );
-//         //block_flip_fast( pdict, num_matrix, 5e4, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else {i = max_loop;}
-//         if (prior == 0) { i = max_loop; }
-//     }
-
-//     prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < max_loop; i++ ) {
-//         cout << "50 var loop:" << "\t" << i << endl;
-//         block_flip_recursive_var_range( pdict, num_matrix, 50, prior, 4e5, diff_matrix );
-//         //block_flip_fast( pdict, num_matrix, 5e4, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else {i = max_loop;}
-//         if (prior == 0) { i = max_loop; }
-//     }
-
-//     prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < max_loop; i++ ) {
-//         cout << "25 var loop:" << "\t" << i << endl;
-//         block_flip_recursive_var_range( pdict, num_matrix, 25, prior, 4e5, diff_matrix );
-//         //block_flip_fast( pdict, num_matrix, 5e4, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else {i = max_loop;}
-//         if (prior == 0) { i = max_loop; }
-//     }
-
-//     prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < max_loop; i++ ) {
-//         cout << "10 var loop:" << "\t" << i << endl;
-//         block_flip_recursive_var_range( pdict, num_matrix, 10, prior, 4e5, diff_matrix );
-//         //block_flip_fast( pdict, num_matrix, 5e4, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else {i = max_loop;}
-//         if (prior == 0) { i = max_loop; }
-//     }
-
-//     prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < max_loop; i++ ) {
-//         cout << "5 var loop:" << "\t" << i << endl;
-//         block_flip_recursive_var_range( pdict, num_matrix, 5, prior, 4e5, diff_matrix );
-//         //block_flip_fast( pdict, num_matrix, 5e4, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else {i = max_loop;}
-//         if (prior == 0) { i = max_loop; }
-//     }
-
-    
-// //still need these 2 steps
-// /*
-//     prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < 10; i++ ) {
-//         cout << "5e6 loop:" << "\t" << i << endl;
-//         //block_flip_recursive_pop( pdict, num_matrix, first_window, 4e5, prior, diff_matrix );
-//         block_flip_recursive_pop( pdict, num_matrix, 5e6, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else {i = 10;}
-//         if (prior == 0) { i = 10; }
-//     }
-
-//       prior = 1e6;
-//     prior_prior = prior;
-//     for (int i = 0; i < 10; i++ ) {
-//         cout << "1e6 loop:" << "\t" << i << endl;
-//         block_flip_recursive_pop( pdict, num_matrix, 1e6, 4e5, prior, diff_matrix );
-//         //block_flip_fast( pdict, num_matrix, 5e4, 4e5, prior, diff_matrix );
-//         if (prior_prior > prior ) {prior_prior = prior;}
-//         else {i = 10;}
-//         if (prior == 0) { i = 10; }
-//     }
-// */
-
-//     for (int i = 0; i < 20; i++ ) {switchE_recursive_pop( pdict, num_matrix, 5e5, diff_matrix );} 
-//     for (int i = 0; i < 20; i++){
-//         flipE( pdict, num_matrix, 6e5, diff_matrix );
-   
-//     }
-
-// };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix ) {
+void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff ) {
+    
+    static const std::size_t length = pdict.num_paired;
+
+    int bkp = 0;
+    
+    map_matrix<int> num_matrix_cutoff(length);
+    length_cutoff_nmatrix( pdict, diff_matrix, num_matrix, num_matrix_cutoff );
 
     int max_gap = 0;
     for (int i = 0; i < pdict.num_paired; i++) { 
             int loop_gap = pdict.sorted_paired_positions[i+1]-pdict.sorted_paired_positions[i];
-            if ( loop_gap > max_gap ) { max_gap = loop_gap; }
+            //if ( loop_gap > max_gap ) { max_gap = loop_gap; }
     }
-
-    int max_loop = 500;
+    int max_loop = 2000;
     int count, prior_count;
-    int window = 8000;
+    int window = window_size;
     if ( max_gap > 1e7 && pdict.num_paired < 1e5) { window = 17000; }
-
     int pop_weight = 4e5;
-
-    static const std::size_t length = pdict.num_paired;
+    int max_window = 0;
+    double min_switch = 0;
+    double loop_min;
+    bool global;
     
-    for (int i = 0; i < 20; i++) {
+    
+  
+    for (int i = 0; i < 50; i++) {
         cout << "global loop:" << "\t" << i << endl;
-        switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix );       
+        switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, true, loop_min );      
     }
 
     count = 1e6;
     prior_count = count;
-    double cutoff = -10.0;
+    //double cutoff = -10.0;
 
-    while ( window > 0) {
-        
-        for (int i = 0; i < max_loop; i++ ) {
-            
-            cout << window << "\t" << "loop:" << "\t" << i << endl;
-            block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, cutoff );
-            
-            if ( prior_count > count ) { prior_count = count; }
-            else { i = max_loop; }
-            if (count == 0) { i = max_loop; }
-            
+
+    for (int k = 0; k < 1000; k++) {
+        max_window = 0;
+        min_switch = 0;
+        loop_min = 0;
+        window = window_size;
+        global = false;
+
+
+        //switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, false, loop_min );
+        //if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = true; } 
+
+        while ( window > 0) {
+            //cout << window << "\t" << "loop:" << "\t" << k << endl;
+            block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+            if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = false; } 
+            if (window > 200 ) { window = window - 20; }
+            else { window = window - 1; }
+            count = 1e6;
+            prior_count = count;
         }
-        window = (int)(0.5*window);
-        //if (window > 100 ) { window = (int)(0.5*window); }
-        //else { window = (int)(0.2*window); } 
-        count = 1e6;
-        prior_count = count;
-    }
 
-    window = 100;
-    cutoff = -8.0;    
+        window = (int)0.5*pdict.num_paired;
 
-    while ( window > 0) {
-        
-        for (int i = 0; i < max_loop; i++ ) {
-            
-            cout << window << "\t" << "loop:" << "\t" << i << endl;
-            block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, cutoff );
-            
-            if ( prior_count > count ) { prior_count = count; }
-            else { i = max_loop; }
-            if (count == 0) { i = max_loop; }
+        while ( window > window_size ) {
+            block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+            if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = false; } 
+            window = (int)window/2;
         }
-        
-        window = window-2; 
-
-        count = 1e6;
-        prior_count = count;
+        if ( min_switch > cutoff ) { k = 10000; }
+        cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << global << endl; 
+        if ( global == false ) { block_flip_recursive_var_range( pdict, num_matrix, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
+        else { switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, -10.0, bkp, true, min_switch ); }
     }
-
-    for (int i = 0; i < 100; i++){ flipE( pdict, num_matrix, pop_weight, diff_matrix ); }
-
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +162,7 @@ void solver_recursive_hic( block_dictionary& bdict, std::vector<int> hic_limit_l
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<int>& nmatrix, int range, int& prior, int pop_weight, map_matrix<double> diff_matrix, double cutoff ) {
+static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<int>& nmatrix, int range, int& prior, int pop_weight, map_matrix<double> diff_matrix, double cutoff, int& bkp, bool switch_hap, double& switch_min ) {
        
         double factor;
         int dist = 0;
@@ -332,6 +181,9 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
         int pair_dist;
         int min_pos;
 
+        int bin_distance;
+        double bin_density;
+
         //Creating the first block flip
         for ( int i = 0; i < range; i++ )
         {
@@ -345,13 +197,11 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
             for ( auto const &ent1 : nmatrix.mat[i] ) 
             {
                 auto const &m = ent1.first;
-                
                 if (m > last_pos)
                 {
                     first_switchE += 2.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m);
                 }
-            }
-                
+            }   
         }
 
 //Adding the population term
@@ -367,10 +217,7 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
             min_switchE = first_switchE;
             min_haplotype = loop_haplotype;
         }
-
         loop_switchE = first_switchE;
-
-
 
         //Calculating the subsequent block-flipping energies
         for ( int i = 1; i < (pdict.num_paired-range); i++ ) {
@@ -402,16 +249,11 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
                         loop_switchE += -2.0*pdict.haplotype[last_pos]*pdict.haplotype[m]*diff_matrix(last_pos,m);
                     }
                 }
-
-            
-            
             }
 
             //Taking care of the previous variant
             for (auto const &ent1 : nmatrix.mat[i - 1]){
                 auto const &m = ent1.first;
-                
-
                 if ( m > last_pos) {
                     loop_switchE += -2.0*pdict.haplotype[i-1]*pdict.haplotype[m]*diff_matrix(i-1, m);
                 }
@@ -423,35 +265,33 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
                         loop_switchE += 2.0*pdict.haplotype[i-1]*pdict.haplotype[m]*diff_matrix(i-1,m);
                     }                
                 }
-
             }
 
             //Adding population term
             dist = abs(pdict.sorted_paired_positions[last_pos]-pdict.sorted_paired_positions[last_pos+1]);
             factor = (double)dist/pop_weight;
             save_pop = 2.0*exp(-1.0*factor)*pdict.haplotype[last_pos]*pdict.haplotype[last_pos+1]*pdict.pop_hap[last_pos]*pdict.pop_hap[last_pos+1];
-
             loop_switchE += save_pop;
-
             pdict.switchE[i] = loop_switchE;
+
+            bin_distance = pdict.sorted_paired_positions[last_pos] - pdict.sorted_paired_positions[i];
+            bin_density = (double)range/bin_distance;
             
-            //if ( loop_switchE < min_switchE & max_win < 1e6) { 
-            if ( loop_switchE < min_switchE  ) { //&& max_win < 5e5) {  
+            if ( loop_switchE < min_switchE ) { 
+            //if ( loop_switchE < min_switchE && i!= bkp ) { //&& max_win < 5e5) {  
                 min_switchE = loop_switchE;
                 min_haplotype = loop_haplotype;
                 min_pos = i;
+                switch_min = min_switchE;
                 //cout << pdict.sorted_paired_positions[i+range-1]-pdict.sorted_paired_positions[i] << endl;
+                //cout << min_switchE << endl;
             }
-
         }
-
-        cout << "min switching energy" << "\t" << min_switchE << "\t" << min_pos << endl;
-        
-        if ( min_switchE < cutoff ) { pdict.haplotype = min_haplotype; prior = prior-1; }
-
-       
+        //cout << "min switching energy" << "\t" << min_switchE << "\t" << min_pos << endl;
+        if ( min_switchE < -10.0 && switch_hap == true ) { pdict.haplotype = min_haplotype; prior = prior-1; bkp = min_pos; cout << "switch pos" << "\t" << min_pos << endl; }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 static void flipE( coord_dictionary& pdict, map_matrix<int>& nmatrix, int pop_weight, map_matrix<double> diff_matrix ) {
     int nsf = 0;
     double minE = 0.0;
@@ -464,7 +304,9 @@ static void flipE( coord_dictionary& pdict, map_matrix<int>& nmatrix, int pop_we
             
             for (auto const &ent1 : nmatrix.mat[i]) {
                 auto const &m = ent1.first;       
-                initial_energy += -1.0*init_i*pdict.haplotype[m]*diff_matrix(i,m);
+                //initial_energy += -1.0*init_i*pdict.haplotype[m]*diff_matrix(i,m);
+                initial_energy += -1.0*init_i*pdict.haplotype[m]*nmatrix(i,m);
+                
                 //if (pdict.sorted_paired_positions[i] > 39000000 && pdict.sorted_paired_positions[i] < 40500000) {
                     //cout << "HiC_link" << "\t" << pdict.sorted_paired_positions[i] << "\t"<< pdict.sorted_paired_positions[m] << "\t" << abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[m]) << "\t" << nmatrix(i,m) << "\t" << endl;
                 //}
@@ -484,9 +326,12 @@ static void flipE( coord_dictionary& pdict, map_matrix<int>& nmatrix, int pop_we
             pdict.deltaE[i] = (-1)*diff_energy;
     }
     //cout << "spin flips" << "\t" << nsf << endl;
-    if (minE < 0.0) { pdict.haplotype[min_pos] = pdict.haplotype[min_pos]*(-1); }
-    cout << "min pos" << "\t" << min_pos << endl;
+    //if (minE < 0.0 ) { pdict.haplotype[min_pos] = pdict.haplotype[min_pos]*(-1); }
+    for (int i = 0; i < pdict.num_paired; i++) {if (pdict.deltaE[i]<-100.0) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); nsf++; } }
+    //cout << "min pos" << "\t" << min_pos << endl;
+    cout << "number flips" << "\t" << nsf << endl;
 };
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void block_flip_scaffold( coord_dictionary& pdict, map_matrix<int>& nmatrix, int dist, int& prior, map_matrix<double> diff_matrix ) {
         int nbf = 0;
@@ -554,7 +399,7 @@ static void block_flip_scaffold( coord_dictionary& pdict, map_matrix<int>& nmatr
         if ( nbf < prior ) { pdict.haplotype = loop_haplotype; prior = nbf; }
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void switchE_recursive_pop( coord_dictionary& pdict, map_matrix<int>& nmatrix, int pop_weight, map_matrix<double> diff_matrix ) {//, map_matrix<double> diff_matrix, int pop_weight ) {
+static void switchE_recursive_pop( coord_dictionary& pdict, map_matrix<int>& nmatrix, int pop_weight, map_matrix<double> diff_matrix, double cutoff, int& bkp, bool flip, double& loop_min ) {//, map_matrix<double> diff_matrix, int pop_weight ) {
         int nbf = 0;
         int site_diff;
         int min_pos = 0;
@@ -615,11 +460,22 @@ static void switchE_recursive_pop( coord_dictionary& pdict, map_matrix<int>& nma
             double factor2 = (double)site_diff2/pop_weight;
             //FOLLOWING LINE COMMENTED IN TESTING 12/01/2020
             diffE_last = diffE_last + pdict.haplotype[j]*(h_plus[j]-h_minus[j]) + pdict.haplotype[j]*pdict.pop_hap[j]*(exp(-1.0*factor1)*pdict.haplotype[j+1]*pdict.pop_hap[j+1] - exp(-1.0*factor2)*pdict.haplotype[j-1]*pdict.pop_hap[j-1]);
-            
-            if ( diffE_last < min_switch ) { min_switch = diffE_last; min_pos = j; }
+
+            if ( diffE_last < min_switch && j != bkp ) { min_switch = diffE_last; min_pos = j; }
+            //if ( diffE_last < min_switch ) { min_switch = diffE_last; min_pos = j; }
             pdict.switchE[j] = (-1.0)*diffE_last;
+            
         }
-        for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
+        /*
+        for ( int j = 0; j < pdict.num_paired; j++ ) {
+            if ((-1.0)*pdict.switchE[j] < cutoff ){ for (int i = j; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); } }
+        }
+        */
+        
+        loop_min = min_switch; 
+
+        if (min_switch < cutoff && flip == true ) { for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); } bkp = min_pos; }
+
     cout << min_pos << endl;
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -705,11 +561,16 @@ static void traverse_graph( std::unordered_map<int,std::unordered_map<int,int>> 
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void length_cutoff_nmatrix( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix, map_matrix<int>& nmatrix2 ) {
+        
         for (int i = 0; i < pdict.num_paired; i++) {
                 for (auto const &ent1 : nmatrix.mat[i]) {
-                        auto const &m = ent1.first;      //cout << i << " " << m << " " << diff_pos << " " << nmatrix(i,m) << endl;
+                        auto const &m = ent1.first;      
                         int diff_pos = abs(pdict.sorted_paired_positions[m] - pdict.sorted_paired_positions[i]);
-                        if (diff_pos < pos_diff_cutoff) { nmatrix2.add_to(i,m,nmatrix(i,m)); }
+                        //if (diff_pos < pos_diff_cutoff) { nmatrix2.add_to(i,m,nmatrix(i,m)); }
+                        cout << i << " " << m << " " << diff_pos << " " << nmatrix(i,m) << endl;
+                        if (diff_pos < 30000000) { nmatrix2.add_to(i,m,nmatrix(i,m)); nmatrix2.add_to(m,i,nmatrix(i,m)); }
+                        if (diff_pos > 30000000) { nmatrix.add_to(i,m,-nmatrix(i,m)); diff_matrix.add_to(m,i,-nmatrix(m,i));}
+                        if (diff_pos > 30000000) { diff_matrix.add_to(i,m,-diff_matrix(i,m)); diff_matrix.add_to(m,i,-diff_matrix(m,i));}
                 }
         }
 };
@@ -849,130 +710,7 @@ static void switchE( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
 
         //for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
 };
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void switchE_global( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
-        int nbf = 0;
-        double initial_energy = 0.0;
-        int site_diff;
-        int min_pos = 0;
-        double min_switch = 0;
-        for (int i = 0; i < pdict.num_paired; i++) {
 
-            for (auto const &ent1 : nmatrix.mat[i]) {
-                auto const &m = ent1.first;
-                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); 
-            }
-        }
-
-
-
-        for ( int i = 0; i < pdict.num_paired; i++ ) {
-            double final_energy = 0.0;
-            vector<int> switch_haplotype = pdict.haplotype;
-            for (int j = i+1; j < pdict.num_paired; j++) { switch_haplotype[j] = pdict.haplotype[j]*(-1); }
-            for (int k = 0; k < pdict.num_paired; k++) {
-                for (auto const &ent1 : nmatrix.mat[k]){
-                    auto const &m = ent1.first;
-                    final_energy += -1.0*switch_haplotype[k]*switch_haplotype[m]*nmatrix(k,m);
-                }
-            }
-            double diffE = final_energy - initial_energy;
-            pdict.switchE[i] = (-1.0)*diffE;
-            if ( diffE < min_switch ) { min_switch = diffE; min_pos = i; }
-        }
-
-        for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
-};
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void switchE_local( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
-        int nbf = 0;
-        double initial_energy = 0.0;
-        int site_diff;
-        int min_pos = 0;
-        double min_switch = 0;
-
-        for (int i = 0; i < pdict.num_paired; i++) {
-
-            for (auto const &ent1 : nmatrix.mat[i]) {
-                auto const &m = ent1.first;
-                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); 
-            }
-        }
-
-        for ( int i = 0; i < pdict.num_paired; i++ ) {
-        
-            int initial_pos  = pdict.sorted_paired_positions[i];
-            double final_energy = 0.0;
-            vector<int> switch_haplotype = pdict.haplotype;
-            int j = i+1;
-            bool window = true;
-            while(window == true && j < pdict.num_paired) { 
-                switch_haplotype[j] = pdict.haplotype[j]*(-1);
-                j+=1;
-                if(pdict.sorted_paired_positions[j] > initial_pos+5e5) {
-                    window = false;
-                }
-            }
-            for (int k = 0; k < pdict.num_paired; k++) {
-                for (auto const &ent1 : nmatrix.mat[k]){
-                    auto const &m = ent1.first;
-                    final_energy += -1.0*switch_haplotype[k]*switch_haplotype[m]*nmatrix(k,m);
-                }
-            }
-            double diffE = final_energy - initial_energy;
-            pdict.switchE[i] = (-1.0)*diffE;
-            //if ( diffE < min_switch ) { min_switch = diffE; min_pos = i; }
-    if ( diffE < 0 ) {pdict.haplotype = switch_haplotype; initial_energy = final_energy; nbf++;}
-        }
-    cout << "nbf:" << "\t" << nbf << endl;
-
-        //for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
-};
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-static void switchE_mini( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
-        int nbf = 0;
-        double initial_energy = 0.0;
-        int site_diff;
-        int min_pos = 0;
-        double min_switch = 0;
-
-        for (int i = 0; i < pdict.num_paired; i++) {
-
-            for (auto const &ent1 : nmatrix.mat[i]) {
-                auto const &m = ent1.first;
-                initial_energy += -1.0*pdict.haplotype[i]*pdict.haplotype[m]*nmatrix(i,m); 
-            }
-        }
-
-        for ( int i = 0; i < pdict.num_paired; i++ ) {
-        
-            int initial_pos  = pdict.sorted_paired_positions[i];
-            double final_energy = 0.0;
-            vector<int> switch_haplotype = pdict.haplotype;
-            int j = i+1;
-            bool window = true;
-            while(window == true && j < pdict.num_paired) { 
-                switch_haplotype[j] = pdict.haplotype[j]*(-1);
-                j+=1;
-                if(pdict.sorted_paired_positions[j] > initial_pos+1e5) {
-                    window = false;
-                }
-            }
-            for (int k = 0; k < pdict.num_paired; k++) {
-                for (auto const &ent1 : nmatrix.mat[k]){
-                    auto const &m = ent1.first;
-                    final_energy += -1.0*switch_haplotype[k]*switch_haplotype[m]*nmatrix(k,m);
-                }
-            }
-            double diffE = final_energy - initial_energy;
-            pdict.switchE[i] = (-1.0)*diffE;
-            //if ( diffE < min_switch ) { min_switch = diffE; min_pos = i; }
-    if ( diffE < 0 ) {pdict.haplotype = switch_haplotype; initial_energy = final_energy; nbf++;}
-        }
-    cout << "nbf:" << "\t" << nbf << endl;
-
-        //for (int i = min_pos+1; i < pdict.num_paired; i++) { pdict.haplotype[i] = pdict.haplotype[i]*(-1); }
-};
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void switchE_recursive( coord_dictionary& pdict, map_matrix<int>& nmatrix ) {
         int nbf = 0;

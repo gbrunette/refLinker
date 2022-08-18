@@ -6,19 +6,22 @@ namespace opt {
 	static std::string input_graph_file = "./output/graph_variant_jun10_BL1954_tenx_chr20.dat";
 	static std::string input_vcf_file = "./sample_data/BL1954_PCRFree.hets.recalibrated.vcf";
         static std::string id_string = "default";
-        
+        static double window_size = 0.5;
 	static int start_bound = 0;
 	static int end_bound = 300000000;
+        static double cutoff = -10.0;
 };
 
 /////////////// structures ///////////////////
-static const char* shortopts = "ho:g:c:v:n:b:";
+static const char* shortopts = "ho:g:c:v:n:b:w:e:";
 static const struct option longopts[] = {
 	{ "help",        no_argument, NULL, 'h' },
         { "graph-file",  no_argument, NULL, 'g' },
         { "vcf-file",    no_argument, NULL, 'v' },
         { "chr-choice",  no_argument, NULL, 'c' },
-        { "id_string",   no_argument, NULL, 'n' }
+        { "id_string",   no_argument, NULL, 'n' },
+        { "window_size", no_argument, NULL, 'w' },
+        { "cutoff", no_argument, NULL, 'e'},
         
 };
 
@@ -50,6 +53,8 @@ static void parse_pop_phaser_options( int argc, char** argv ) {
                 case 'g': arg >> opt::input_graph_file; break;
                 case 'c': arg >> opt::chr_choice; break;
                 case 'n': arg >> opt::id_string; break;
+                case 'w': arg >> opt::window_size; break;
+                case 'e': arg >> opt::cutoff; break;
 
                 }
         }
@@ -86,8 +91,7 @@ void init_hic_pop_matrix( map_matrix<double>& diff_matrix, map_matrix<int>& num_
                 	std::string alt_hash = pdict.alt_handle[i];
 			//cout << pos1 << "\t" << arm1 << "\t" <<  hap1 << "\t" << ref_hash << "\t" << alt_hash << endl;
 			if ( hic_vgraph.find(ref_hash) != hic_vgraph.end() ) {
-                int alt1 = 1;
-
+                                int alt1 = 1;
 				for (auto& it : hic_vgraph[ref_hash].connections) {
 					int pos2 = std::stoi(split_string_first(it.first,"_",0));
                         		std::string hic_ref_base = split_string_first(split_string_first(it.first,"_",1),"_",0);
@@ -96,24 +100,21 @@ void init_hic_pop_matrix( map_matrix<double>& diff_matrix, map_matrix<int>& num_
 					int j = pdict.pos_index[pos2];
 					int hap2 = pdict.haplotype[j];
 					if ( hap2 != 0 ) {
-    					std::string arm2 = "p"; if ( pos2 > centromere_pos ) { arm2 = "q"; }
-    					//int link_hap = alt1*hap1*alt2*hap2;
-    					int link_hap = alt1*alt2;
-
-                        if ( link_hap == 1 ) { n_plus_matrix.add_to(i,j,1);  }//n_plus_matrix.add_to(j,i,1); }
-                        if ( link_hap == -1 ) { n_minus_matrix.add_to(i,j,1); }//n_minus_matrix.add_to(j,i,1); }
-    					
-    					temp_total_matrix.add_to(i,j,link_hap);
-    					temp_total_matrix.add_to(j,i,link_hap);
-    					count_matrix.add_to(i,j,1);
-    					count_matrix.add_to(j,i,1);
-    					//cout << i << "\t" << pos1 << "\t" << alt1 << "\t" << j << "\t" << pos2 << "\t" << alt2 << "\t" << temp_total_matrix(i,j) << endl;
+            					std::string arm2 = "p"; if ( pos2 > centromere_pos ) { arm2 = "q"; }
+            					//int link_hap = alt1*hap1*alt2*hap2;
+            					int link_hap = alt1*alt2;
+                                                if ( link_hap == 1 ) { n_plus_matrix.add_to(i,j,1);  }//n_plus_matrix.add_to(j,i,1); }
+                                                if ( link_hap == -1 ) { n_minus_matrix.add_to(i,j,1); }//n_minus_matrix.add_to(j,i,1); }
+            					temp_total_matrix.add_to(i,j,link_hap);
+            					temp_total_matrix.add_to(j,i,link_hap);
+            					count_matrix.add_to(i,j,1);
+            					count_matrix.add_to(j,i,1);
+            					//cout << i << "\t" << pos1 << "\t" << alt1 << "\t" << j << "\t" << pos2 << "\t" << alt2 << "\t" << temp_total_matrix(i,j) << endl;
 					}
 				}
 			}
 			if ( hic_vgraph.find(alt_hash) != hic_vgraph.end() ) {
-                int alt1 = -1;
-                
+                                int alt1 = -1;
 				for (auto& it : hic_vgraph[alt_hash].connections) {
 					int pos2 = std::stoi(split_string_first(it.first,"_",0));
 					std::string hic_ref_base = split_string_first(split_string_first(it.first,"_",1),"_",0);
@@ -125,10 +126,8 @@ void init_hic_pop_matrix( map_matrix<double>& diff_matrix, map_matrix<int>& num_
     					std::string arm2 = "p"; if ( pos2 > centromere_pos ) { arm2 = "q"; }
     					//int link_hap = alt1*hap1*alt2*hap2;
     					int link_hap = alt1*alt2;
-
-                        if ( link_hap == 1 ) { n_plus_matrix.add_to(i,j,1); }//n_plus_matrix.add_to(j,i,1); }
-                        if ( link_hap == -1 ) { n_minus_matrix.add_to(i,j,1); }//n_minus_matrix.add_to(j,i,1); }
-
+                                        if ( link_hap == 1 ) { n_plus_matrix.add_to(i,j,1); }//n_plus_matrix.add_to(j,i,1); }
+                                        if ( link_hap == -1 ) { n_minus_matrix.add_to(i,j,1); }//n_minus_matrix.add_to(j,i,1); }
     					temp_total_matrix.add_to(i,j,link_hap);
     					temp_total_matrix.add_to(j,i,link_hap);
     					count_matrix.add_to(i,j,1);
@@ -161,11 +160,11 @@ void init_hic_pop_matrix( map_matrix<double>& diff_matrix, map_matrix<int>& num_
         for (auto const &ent1 : count_matrix.mat[i]){
             auto const &m = ent1.first;
             double prefactor = (double)temp_total_matrix(i,m)*abs(temp_total_matrix(i,m))/count_matrix(i,m);
-            
-            //double eps_ij = (double) min(n_plus_matrix(i,m), n_minus_matrix(i,m)) / (n_plus_matrix(i,m) + n_minus_matrix(i,m));
-            //double eps = max(eps0, eps_ij);
-            //double prefactor = (double)(n_plus_matrix(i,m) - n_minus_matrix(i,m))*log((1-eps)/eps);
-            
+            /*
+            double eps_ij = (double) min(n_plus_matrix(i,m), n_minus_matrix(i,m)) / (n_plus_matrix(i,m) + n_minus_matrix(i,m));
+            double eps = max(eps0, eps_ij);
+            double prefactor = (double)(n_plus_matrix(i,m) - n_minus_matrix(i,m))*log((1-eps)/eps);
+            */
             //cout << i << "\t" << m << "\t" << prefactor << endl;
             diff_matrix.set_val(i,m,prefactor);
             diff_matrix.set_val(m,i,prefactor);
@@ -235,7 +234,7 @@ void run_pop_phaser( int argc, char** argv ) {
 	//pdict.hap_random_initialization();
 	init_hic_pop_matrix( diff_matrix, num_matrix, pdict, hic_vgraph, centromere_pos );
 
-        solver_recursive_pop( hic_vgraph, pdict, num_matrix, diff_matrix );
+        solver_recursive_pop( hic_vgraph, pdict, num_matrix, diff_matrix, opt::window_size, opt::cutoff );
 	
 	///////////////////////////////////////////////////////////////
 	///////////// write haplotype output
