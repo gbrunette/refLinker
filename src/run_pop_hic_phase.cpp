@@ -103,8 +103,8 @@ void init_hic_pop_matrix( map_matrix<double>& diff_matrix, map_matrix<int>& num_
             					std::string arm2 = "p"; if ( pos2 > centromere_pos ) { arm2 = "q"; }
             					//int link_hap = alt1*hap1*alt2*hap2;
             					int link_hap = alt1*alt2;
-                                                if ( link_hap == 1 ) { n_plus_matrix.add_to(i,j,1);  }//n_plus_matrix.add_to(j,i,1); }
-                                                if ( link_hap == -1 ) { n_minus_matrix.add_to(i,j,1); }//n_minus_matrix.add_to(j,i,1); }
+                                                if ( link_hap == 1 ) { n_plus_matrix.add_to(i,j,1);  n_plus_matrix.add_to(j,i,1); } //UNCOMMENTED 2022/11/14
+                                                if ( link_hap == -1 ) { n_minus_matrix.add_to(i,j,1); n_minus_matrix.add_to(j,i,1); }  //UNCOMMENTED 2022/11/14
             					temp_total_matrix.add_to(i,j,link_hap);
             					temp_total_matrix.add_to(j,i,link_hap);
             					count_matrix.add_to(i,j,1);
@@ -126,8 +126,8 @@ void init_hic_pop_matrix( map_matrix<double>& diff_matrix, map_matrix<int>& num_
     					std::string arm2 = "p"; if ( pos2 > centromere_pos ) { arm2 = "q"; }
     					//int link_hap = alt1*hap1*alt2*hap2;
     					int link_hap = alt1*alt2;
-                                        if ( link_hap == 1 ) { n_plus_matrix.add_to(i,j,1); }//n_plus_matrix.add_to(j,i,1); }
-                                        if ( link_hap == -1 ) { n_minus_matrix.add_to(i,j,1); }//n_minus_matrix.add_to(j,i,1); }
+                                        if ( link_hap == 1 ) { n_plus_matrix.add_to(i,j,1); n_plus_matrix.add_to(j,i,1); }  //UNCOMMENTED 2022/11/14
+                                        if ( link_hap == -1 ) { n_minus_matrix.add_to(i,j,1); n_minus_matrix.add_to(j,i,1); }  //UNCOMMENTED 2022/11/14
     					temp_total_matrix.add_to(i,j,link_hap);
     					temp_total_matrix.add_to(j,i,link_hap);
     					count_matrix.add_to(i,j,1);
@@ -160,17 +160,18 @@ void init_hic_pop_matrix( map_matrix<double>& diff_matrix, map_matrix<int>& num_
         for (auto const &ent1 : count_matrix.mat[i]){
             auto const &m = ent1.first;
             double prefactor = (double)temp_total_matrix(i,m)*abs(temp_total_matrix(i,m))/count_matrix(i,m);
-            /*
-            double eps_ij = (double) min(n_plus_matrix(i,m), n_minus_matrix(i,m)) / (n_plus_matrix(i,m) + n_minus_matrix(i,m));
-            double eps = max(eps0, eps_ij);
-            double prefactor = (double)(n_plus_matrix(i,m) - n_minus_matrix(i,m))*log((1-eps)/eps);
-            */
+            
+            //double eps_ij = (double) min(n_plus_matrix(i,m), n_minus_matrix(i,m)) / (n_plus_matrix(i,m) + n_minus_matrix(i,m));
+            //double eps = max(eps0, eps_ij);
+            //double prefactor = (double)(n_plus_matrix(i,m) - n_minus_matrix(i,m))*log((1-eps)/eps);
+            
             //cout << i << "\t" << m << "\t" << prefactor << endl;
             diff_matrix.set_val(i,m,prefactor);
             diff_matrix.set_val(m,i,prefactor);
         }
             }
-	num_matrix = temp_total_matrix;
+	//num_matrix = temp_total_matrix;
+        num_matrix = count_matrix;
 };
 
 /////////////////////////////////////////////////////////////////
@@ -235,6 +236,7 @@ void run_pop_phaser( int argc, char** argv ) {
 	init_hic_pop_matrix( diff_matrix, num_matrix, pdict, hic_vgraph, centromere_pos );
 
         solver_recursive_pop( hic_vgraph, pdict, num_matrix, diff_matrix, opt::window_size, opt::cutoff );
+        //no_switch( hic_vgraph, pdict, num_matrix, diff_matrix, opt::window_size, opt::cutoff );
 	
 	///////////////////////////////////////////////////////////////
 	///////////// write haplotype output

@@ -55,24 +55,38 @@ void solver_recursive( std::unordered_map<std::string,variant_node>& var_dict, c
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff ) {
     
     static const std::size_t length = pdict.num_paired;
 
     int bkp = 0;
-    
+    map_matrix<double> diff_matrix_saved(length);
+
+    diff_matrix_saved = diff_matrix;
+
     map_matrix<int> num_matrix_cutoff(length);
-    length_cutoff_nmatrix( pdict, diff_matrix, num_matrix, num_matrix_cutoff );
+    map_matrix<int> num_matrix_saved(length);
+
+    num_matrix_cutoff = num_matrix;
+    num_matrix_saved = num_matrix;
+
+    
+    //length_cutoff_nmatrix( pdict, diff_matrix, num_matrix, num_matrix_cutoff );
+
+    length_cutoff_nmatrix2( pdict, diff_matrix_saved, num_matrix, num_matrix_saved);
 
     int max_gap = 0;
     for (int i = 0; i < pdict.num_paired; i++) { 
             int loop_gap = pdict.sorted_paired_positions[i+1]-pdict.sorted_paired_positions[i];
             //if ( loop_gap > max_gap ) { max_gap = loop_gap; }
     }
+
     int max_loop = 2000;
     int count, prior_count;
     int window = window_size;
-    if ( max_gap > 1e7 && pdict.num_paired < 1e5) { window = 17000; }
+    
+    //if ( max_gap > 1e7 && pdict.num_paired < 1e5) { window = 17000; }
     int pop_weight = 4e5;
     int max_window = 0;
     double min_switch = 0;
@@ -80,12 +94,12 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
     bool global;
     
     
-  
+/*
     for (int i = 0; i < 50; i++) {
         cout << "global loop:" << "\t" << i << endl;
         switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, true, loop_min );      
     }
-
+*/
     count = 1e6;
     prior_count = count;
     //double cutoff = -10.0;
@@ -103,27 +117,140 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
         //if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = true; } 
 
         while ( window > 0) {
-            //cout << window << "\t" << "loop:" << "\t" << k << endl;
-            block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
-            if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = false; } 
-            if (window > 200 ) { window = window - 20; }
+            //block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+            block_flip_recursive_var_range( pdict, num_matrix_cutoff, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+            
+            if (loop_min <= min_switch) { min_switch = loop_min; max_window = window; global = false; } 
+            if (window > 20) { window = window - 20; }
+            //if (window > 200 ) { window = window - 20; }
             else { window = window - 1; }
             count = 1e6;
             prior_count = count;
         }
 
-        window = (int)0.5*pdict.num_paired;
+        window = (int)pdict.num_paired/2;
 
         while ( window > window_size ) {
-            block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+            //block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+            block_flip_recursive_var_range( pdict, num_matrix_cutoff, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+            if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = false; } 
+            window = (int)window/2;
+        }
+
+        if ( min_switch > cutoff ) { k = 10000; }
+        cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << global << endl; 
+        if ( global == false && min_switch < cutoff ) { block_flip_recursive_var_range( pdict, num_matrix_cutoff, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
+        //else { switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, true, min_switch ); }
+    }
+/*
+    for (int k = 0; k < 1000; k++) {
+        max_window = 0;
+        min_switch = 0;
+        loop_min = 0;
+        window = 200;
+        global = false;
+
+
+        //switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, false, loop_min );
+        //if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = true; } 
+
+        while ( window > 0) {
+            //cout << window << "\t" << "loop:" << "\t" << k << endl;
+            block_flip_recursive_var_range( pdict, num_matrix_cutoff, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+            
+            if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = false; } 
+            window = window -1; 
+            count = 1e6;
+            prior_count = count;
+        }
+        if ( min_switch > cutoff ) { k = 10000; }
+        cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << global << endl; 
+        if ( global == false ) { block_flip_recursive_var_range( pdict, num_matrix_cutoff, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
+        //else { switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, true, min_switch ); }
+    }
+*/
+/*
+     for (int k = 0; k < 1000; k++) {
+        max_window = 0;
+        min_switch = 0;
+        loop_min = 0;
+        window = window_size;
+        global = false;
+
+
+        //switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, false, loop_min );
+        //if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = true; } 
+
+        while ( window > 200) {
+            block_flip_recursive_var_range( pdict, num_matrix_saved, window, count, pop_weight, diff_matrix_saved, 0, bkp, false, loop_min );
+            
+            if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = false; } 
+            window = window - 20;
+            //if (window > 200 ) { window = window - 20; }
+            //else { window = window - 1; }
+            count = 1e6;
+            prior_count = count;
+        }
+
+        window = (int)pdict.num_paired/2;
+
+        while ( window > window_size ) {
+            block_flip_recursive_var_range( pdict, num_matrix_saved, window, count, pop_weight, diff_matrix_saved, 0, bkp, false, loop_min );
             if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = false; } 
             window = (int)window/2;
         }
         if ( min_switch > cutoff ) { k = 10000; }
         cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << global << endl; 
-        if ( global == false ) { block_flip_recursive_var_range( pdict, num_matrix, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
-        else { switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, -10.0, bkp, true, min_switch ); }
+        if ( global == false ) { block_flip_recursive_var_range( pdict, num_matrix_saved, max_window, count, pop_weight, diff_matrix_saved, 0, bkp, true, min_switch ); }
+        //else { switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, true, min_switch ); }
     }
+*/
+//for ( int i = 0; i < 10; i++ ) { loop_min = 0; switchE_recursive_pop( pdict, num_matrix_saved, pop_weight, diff_matrix_saved, cutoff, bkp, true, loop_min ); }
+};
+
+void no_switch( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff ) {
+int pop_weight = 4e5;
+double loop_min = 0;
+int bkp = 0;
+int count = 1e6;
+bool next = true;
+calculate_switchE_pop( pdict, num_matrix, pop_weight, diff_matrix );
+//block_flip_recursive_var_range( pdict, num_matrix, 250, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
+//switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, false, loop_min ); 
+//calculate_block_flip(pdict, best_window, min_switch, true);
+
+while ( next == true ) {
+    int range = 1000;
+    double min_switch = 0;
+    int best_window = 0;
+    //calculate_switchE_pop( pdict, num_matrix, pop_weight, diff_matrix );
+    while (range > 0) {
+        calculate_block_flip(pdict, range, loop_min, false);
+        if ( loop_min <= min_switch ) { min_switch = loop_min; best_window = range; }
+        range = range-1;
+    }
+    if ( min_switch < cutoff ) {
+        calculate_block_flip(pdict, best_window, min_switch, true);
+        cout << "Range: " << best_window << "\t" << "flipE: " << min_switch << endl; 
+    }
+    else { next = false; } 
+}
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void calculate_block_flip( coord_dictionary& pdict, int range, double& switch_min, bool do_flip ) {
+    switch_min = 0;
+    int flip_point; 
+    for (int i = 1; i < pdict.num_paired-range-1; i++) {
+        double loop_switch = pdict.switchE[i] - pdict.switchE[i+range];
+        if (-loop_switch < switch_min) { switch_min = -loop_switch; flip_point = i; }
+    }
+    if ( do_flip == true ) { 
+        for ( int i = flip_point+1; i < flip_point+range+1; i++ ) {
+            pdict.haplotype[i] = -1*pdict.haplotype[i]; 
+        }
+        cout << "Flip_pos: " << pdict.sorted_paired_positions[flip_point] << endl;
+    }
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,6 +311,10 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
         int bin_distance;
         double bin_density;
 
+        
+        int gap = 0;
+        
+
         //Creating the first block flip
         for ( int i = 0; i < range; i++ )
         {
@@ -221,6 +352,9 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
 
         //Calculating the subsequent block-flipping energies
         for ( int i = 1; i < (pdict.num_paired-range); i++ ) {
+
+            gap = 0;
+            
 
             last_pos = i+range-1;
 
@@ -276,19 +410,31 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
 
             bin_distance = pdict.sorted_paired_positions[last_pos] - pdict.sorted_paired_positions[i];
             bin_density = (double)range/bin_distance;
+
+            for (int j = i+1; j < last_pos; j++) {
+
+                if ( (pdict.sorted_paired_positions[j] - pdict.sorted_paired_positions[j-1]) > gap) 
+                    { gap = pdict.sorted_paired_positions[j] - pdict.sorted_paired_positions[j-1];}
+            }
             
-            if ( loop_switchE < min_switchE ) { 
-            //if ( loop_switchE < min_switchE && i!= bkp ) { //&& max_win < 5e5) {  
+            
+            
+
+            //if ( loop_switchE < min_switchE && bin_density > 0.0009 ) {
+
+            //if ( loop_switchE < min_switchE && gap <= 100000) {
+            if ( loop_switchE < min_switchE ) {
                 min_switchE = loop_switchE;
                 min_haplotype = loop_haplotype;
                 min_pos = i;
-                switch_min = min_switchE;
-                //cout << pdict.sorted_paired_positions[i+range-1]-pdict.sorted_paired_positions[i] << endl;
-                //cout << min_switchE << endl;
+                switch_min = loop_switchE;
             }
         }
+        switch_min = min_switchE;
+        //cout << "block flip var range loop_switchE" << "\t" << loop_switchE << "\t" << "min_switchE" << "\t" << min_switchE << "\t" << switch_min << endl;
         //cout << "min switching energy" << "\t" << min_switchE << "\t" << min_pos << endl;
-        if ( min_switchE < -10.0 && switch_hap == true ) { pdict.haplotype = min_haplotype; prior = prior-1; bkp = min_pos; cout << "switch pos" << "\t" << min_pos << endl; }
+        if ( switch_hap == true ) { pdict.haplotype = min_haplotype; prior = prior-1; bkp = min_pos; cout << "switch pos" << "\t" << pdict.sorted_paired_positions[min_pos] << "\t"
+        << "gap" << "\t" << gap << endl; }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -568,10 +714,32 @@ static void length_cutoff_nmatrix( coord_dictionary& pdict, map_matrix<double>& 
                         int diff_pos = abs(pdict.sorted_paired_positions[m] - pdict.sorted_paired_positions[i]);
                         //if (diff_pos < pos_diff_cutoff) { nmatrix2.add_to(i,m,nmatrix(i,m)); }
                         cout << i << " " << m << " " << diff_pos << " " << nmatrix(i,m) << endl;
-                        if (diff_pos < 30000000) { nmatrix2.add_to(i,m,nmatrix(i,m)); nmatrix2.add_to(m,i,nmatrix(i,m)); }
-                        if (diff_pos > 30000000) { nmatrix.add_to(i,m,-nmatrix(i,m)); diff_matrix.add_to(m,i,-nmatrix(m,i));}
-                        if (diff_pos > 30000000) { diff_matrix.add_to(i,m,-diff_matrix(i,m)); diff_matrix.add_to(m,i,-diff_matrix(m,i));}
+                        //if (diff_pos < 1000000) { nmatrix2.add_to(i,m,nmatrix(i,m)); nmatrix2.add_to(m,i,nmatrix(i,m)); }
+                        if (diff_pos > 1000000) { nmatrix2.add_to(i,m,-nmatrix(i,m)); nmatrix2.add_to(m,i,-nmatrix(m,i));}
+                        if (diff_pos > 1000000) { diff_matrix.add_to(i,m,-diff_matrix(i,m)); diff_matrix.add_to(m,i,-diff_matrix(m,i));}
                 }
+        }
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+static void length_cutoff_nmatrix2( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix, map_matrix<int>& nmatrix2 ) {
+    map_matrix<double> saved_diff_mat;
+    saved_diff_mat = diff_matrix;
+        
+        for (int i = 0; i < pdict.num_paired; i++) {
+            int num_links = 0;
+            for (auto const &ent1 : nmatrix.mat[i]) {
+                    auto const &m = ent1.first;      
+                    //int diff_pos = abs(pdict.sorted_paired_positions[m] - pdict.sorted_paired_positions[i]);
+                    //if (diff_pos < pos_diff_cutoff) { nmatrix2.add_to(i,m,nmatrix(i,m)); }
+                    //cout << i << " " << m << " " << diff_pos << " " << nmatrix(i,m) << endl;
+                    //if (diff_pos < 1000000) { nmatrix2.add_to(i,m,nmatrix(i,m)); nmatrix2.add_to(m,i,nmatrix(i,m)); }
+                    //if (diff_pos < 1000000) { nmatrix2.add_to(i,m,-nmatrix(i,m)); nmatrix2.add_to(m,i,-nmatrix(m,i));}
+                    //if (diff_pos < 1000000) { diff_matrix.add_to(i,m,-diff_matrix(i,m)); diff_matrix.add_to(m,i,-diff_matrix(m,i));}
+                    num_links = num_links+nmatrix(i,m);
+            }
+            //cout << "pos " << pdict.sorted_paired_positions[i] << "\t" << "links " << num_links << endl;
+            if (num_links>=50) { pdict.haplotype[i] = 0; cout << "num_links" << "\t" << num_links << "\t" << pdict.sorted_paired_positions[i] << endl; }
+
         }
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -776,9 +944,9 @@ static void calculate_switchE_pop( coord_dictionary& pdict, map_matrix<int>& nma
             for (auto const &ent1 : nmatrix.mat[i]) { 
                 auto const &m = ent1.first;
                 //if (pdict.sorted_paired_positions[m] < pdict.sorted_paired_positions[i]) { h_left = h_left + nmatrix(i,m)*pdict.haplotype[m]; }
-                if ( pdict.sorted_paired_positions[m] < pdict.sorted_paired_positions[i] ) { h_left = h_left + diff_matrix(i,m)*pdict.haplotype[m]; }
+                if ( pdict.sorted_paired_positions[m] < pdict.sorted_paired_positions[i] ) { h_left = h_left + 2.0*diff_matrix(i,m)*pdict.haplotype[m]; }
                 //if (pdict.sorted_paired_positions[m] > pdict.sorted_paired_positions[i]) { h_right = h_right + nmatrix(i,m)*pdict.haplotype[m]; }
-                if ( pdict.sorted_paired_positions[m] > pdict.sorted_paired_positions[i] ) { h_right = h_right + diff_matrix(i,m)*pdict.haplotype[m]; }
+                if ( pdict.sorted_paired_positions[m] > pdict.sorted_paired_positions[i] ) { h_right = h_right + 2.0*diff_matrix(i,m)*pdict.haplotype[m]; }
                 
             }
             h_minus.push_back(h_left);

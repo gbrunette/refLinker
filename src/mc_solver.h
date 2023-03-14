@@ -39,10 +39,13 @@ void call_blocks(coord_dictionary& pdict, int switch_cutoff);
 
 /////////////////
 void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff );
+void no_switch( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff );
+
 void solver_recursive( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<double> diff_matrix, map_matrix<int> num_matrix_second );
 void solver_recursive_hic( block_dictionary& bdict, std::vector<int> hic_limit_loop, map_matrix<int> block_matrix );
 
-static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<int>& nmatrix, int range, int& prior, int pop_weight, map_matrix<double> diff_matrix, double cutoff, int& bkp, bool switch_hap, double& min_switch );
+static void calculate_block_flip( coord_dictionary& pdict, int range, double& switch_min, bool do_flip );
+static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<int>& nmatrix, int range, int& prior, int pop_weight, map_matrix<double> diff_matrix, double cutoff, int& bkp, bool switch_hap, double& switch_min );
 static void block_flip_recursive_pop( coord_dictionary& pdict, map_matrix<int>& nmatrix, int dist, int pop_weight, int& prior, map_matrix<double> diff_matrix );
 
 static void block_flip_scaffold( coord_dictionary& pdict, map_matrix<int>& nmatrix, int dist, int& prior, map_matrix<double> diff_matrix );
@@ -63,6 +66,7 @@ static void block_flip_fast( coord_dictionary& pdict, map_matrix<int>& nmatrix, 
 static void single_spin_flip_recursive( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix );
 static void block_flip_recursive( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix );
 static void length_cutoff_nmatrix( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix, map_matrix<int>& nmatrix2 );
+static void length_cutoff_nmatrix2( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix, map_matrix<int>& nmatrix2 );
 
 static void single_spin_flip_recursive_hic( block_dictionary& bdict );
 static void block_flip_recursive_hic( block_dictionary& bdict );
