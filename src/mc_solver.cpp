@@ -724,9 +724,12 @@ static void length_cutoff_nmatrix( coord_dictionary& pdict, map_matrix<double>& 
 static void length_cutoff_nmatrix2( coord_dictionary& pdict, map_matrix<double>& diff_matrix, map_matrix<int>& nmatrix, map_matrix<int>& nmatrix2 ) {
     map_matrix<double> saved_diff_mat;
     saved_diff_mat = diff_matrix;
+    std::vector<double> count_vec;
+    double count;
+    double percentile;
         
         for (int i = 0; i < pdict.num_paired; i++) {
-            int num_links = 0;
+            double num_links = 0;
             for (auto const &ent1 : nmatrix.mat[i]) {
                     auto const &m = ent1.first;      
                     //int diff_pos = abs(pdict.sorted_paired_positions[m] - pdict.sorted_paired_positions[i]);
@@ -737,10 +740,22 @@ static void length_cutoff_nmatrix2( coord_dictionary& pdict, map_matrix<double>&
                     //if (diff_pos < 1000000) { diff_matrix.add_to(i,m,-diff_matrix(i,m)); diff_matrix.add_to(m,i,-diff_matrix(m,i));}
                     num_links = num_links+nmatrix(i,m);
             }
+            count_vec.push_back(num_links);
             //cout << "pos " << pdict.sorted_paired_positions[i] << "\t" << "links " << num_links << endl;
-            if (num_links>=50) { pdict.haplotype[i] = 0; cout << "num_links" << "\t" << num_links << "\t" << pdict.sorted_paired_positions[i] << endl; }
-
+            //if (num_links>=50) { pdict.haplotype[i] = 0; cout << "num_links" << "\t" << num_links << "\t" << pdict.sorted_paired_positions[i] << endl; }
         }
+        cout << "count_vec size: " << count_vec.size() << "\t" << "num_paired " << pdict.num_paired << endl;
+        for (int i = 0; i < pdict.num_paired; i++) {
+            count = 0;
+            for (int j = 0; j < pdict.num_paired; j++) {
+                if (count_vec[i] > count_vec[j]) {
+                    count++;
+                }
+            }
+            percentile = count / (pdict.num_paired - 1);
+            if (percentile >= 0.995) { pdict.haplotype[i] = 0; cout << "num_links" << "\t" << count_vec[i] << "\t" << pdict.sorted_paired_positions[i] << endl;}
+        }
+ 
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void call_blocks(coord_dictionary& pdict,int switch_cutoff ) {
