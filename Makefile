@@ -3,9 +3,9 @@ UNAME_S := $(shell uname -s)
 
 # CC
 ifeq ($(UNAME_S),Darwin)
-  CC := clang++ -std=c++11 -stdlib=libc++
+  CC := clang++ -std=c++11 -stdlib=libc++ -fopenmp
 else
-  CC := c++ -o3 -std=c++11
+  CC := c++ -o3 -std=c++11 -fopenmp
 endif
 
 LDIR=./packages/bamtools/lib64/
