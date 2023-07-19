@@ -84,6 +84,7 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
     double min_switch = 0;
     double loop_min;
     bool global;
+    bool long_range = true;
     
     
     count = 1e6;
@@ -118,61 +119,86 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
             window = (int)window/2;
         }
 */
-        std::vector<double> best_switch(100, 0.0);
 
-        #pragma omp parallel for num_threads(8)
-        for (int i=0; i<100; i++) {
-                best_switch[i]=calculate_flipE( pdict, num_matrix_cutoff, (i+1)*20, pop_weight, diff_matrix );
-                int tid = omp_get_thread_num();
-                printf("The thread %d  executes i = %d\n", tid, i);
+        if ( long_range == true ) {
+
+            std::vector<double> best_switch(90, 0.0);
+
+            #pragma omp parallel for num_threads(8)
+            for (int i=0; i<90; i++) {
+                    best_switch[i]=calculate_flipE( pdict, num_matrix_cutoff, ((i+1)*20+200), pop_weight, diff_matrix );
+                    int tid = omp_get_thread_num();
+                    //printf("The thread %d  executes i = %d\n", tid, i);
+            }
+
+            double min = *min_element(best_switch.begin(), best_switch.end());
+            auto it = std::min_element(std::begin(best_switch), std::end(best_switch));
+            auto min_index = std::distance(std::begin(best_switch), it);
+
+            std::vector<double> best_switch2(200, 0.0);
+
+            #pragma omp parallel for num_threads(8)
+            for (int i=0; i<200; i++) {
+                    best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix );
+                    //int tid = omp_get_thread_num();
+                    //printf("The thread %d  executes i = %d\n", tid, i);
+            }
+
+            double min2 = *min_element(best_switch2.begin(), best_switch2.end());
+            auto it2 = std::min_element(std::begin(best_switch2), std::end(best_switch2));
+            auto min_index2 = std::distance(std::begin(best_switch2), it2);
+
+            if (min2 < min) { min_switch = min2; max_window = int(min_index2)+1; }
+            else { min_switch = min; max_window = (int)min_index*20+220;}
+
+
+            window = (int)pdict.num_paired;
+            std::vector<int> large_scale;
+            std::vector<double> best_switch3;
+
+
+            while ( window > window_size ) {
+                window = (int)window/2;
+                large_scale.push_back(window);
+                best_switch3.push_back(0.0);
+            }
+
+            #pragma omp parallel for num_threads(8)
+            for (int i=0; i<large_scale.size(); i++) {
+                    best_switch3[i]=calculate_flipE( pdict, num_matrix_cutoff, large_scale[i], pop_weight, diff_matrix );
+                    //int tid = omp_get_thread_num();
+                    //printf("The thread %d  executes i = %d\n", tid, i);
+            }
+
+            double min3 = *min_element(best_switch3.begin(), best_switch3.end());
+            auto it3 = std::min_element(std::begin(best_switch3), std::end(best_switch3));
+            auto min_index3 = std::distance(std::begin(best_switch3), it3);
+
+            if (min3 < min) { min_switch = min3; max_window = large_scale[min_index3]; }
         }
 
-        double min = *min_element(best_switch.begin(), best_switch.end());
-        auto it = std::min_element(std::begin(best_switch), std::end(best_switch));
-        auto min_index = std::distance(std::begin(best_switch), it);
+        else {
 
-        std::vector<double> best_switch2(200, 0.0);
+            std::vector<double> best_switch2(200, 0.0);
 
-        #pragma omp parallel for num_threads(8)
-        for (int i=0; i<200; i++) {
-                best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix );
-                //int tid = omp_get_thread_num();
-                //printf("The thread %d  executes i = %d\n", tid, i);
+            #pragma omp parallel for num_threads(8)
+            for (int i=0; i<200; i++) {
+                    best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix );
+                    //int tid = omp_get_thread_num();
+                    //printf("The thread %d  executes i = %d\n", tid, i);
+            }
+
+            double min2 = *min_element(best_switch2.begin(), best_switch2.end());
+            auto it2 = std::min_element(std::begin(best_switch2), std::end(best_switch2));
+            auto min_index2 = std::distance(std::begin(best_switch2), it2);
+
+            min_switch = min2;
+            max_window = int(min_index2)+1;
+
         }
 
-        double min2 = *min_element(best_switch2.begin(), best_switch2.end());
-        auto it2 = std::min_element(std::begin(best_switch2), std::end(best_switch2));
-        auto min_index2 = std::distance(std::begin(best_switch2), it2);
 
-        if (min2 < min) { min_switch = min2; max_window = int(min_index2)+1; }
-        else { min_switch = min; max_window = (int)min_index*20+20;}
-
-
-        window = (int)pdict.num_paired;
-        std::vector<int> large_scale;
-        std::vector<double> best_switch3;
-
-
-        while ( window > window_size ) {
-            window = (int)window/2;
-            large_scale.push_back(window);
-            best_switch3.push_back(0.0);
-        }
-
-        #pragma omp parallel for num_threads(8)
-        for (int i=0; i<large_scale.size(); i++) {
-                best_switch3[i]=calculate_flipE( pdict, num_matrix_cutoff, large_scale[i], pop_weight, diff_matrix );
-                //int tid = omp_get_thread_num();
-                //printf("The thread %d  executes i = %d\n", tid, i);
-        }
-
-        double min3 = *min_element(best_switch3.begin(), best_switch3.end());
-        auto it3 = std::min_element(std::begin(best_switch3), std::end(best_switch3));
-        auto min_index3 = std::distance(std::begin(best_switch3), it3);
-
-        if (min3 < min) { min_switch = min3; max_window = large_scale[min_index3]; }
-
-
+        if ( max_window == 1 ) { long_range = false; }
         
 
 /*
