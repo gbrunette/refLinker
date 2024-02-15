@@ -10,10 +10,11 @@ namespace opt {
 	static int start_bound = 0;
 	static int end_bound = 300000000;
         static double cutoff = -10.0;
+        static double prune = 0.995;
 };
 
 /////////////// structures ///////////////////
-static const char* shortopts = "ho:g:c:v:n:b:w:e:";
+static const char* shortopts = "ho:g:c:v:n:b:w:e:p:";
 static const struct option longopts[] = {
 	{ "help",        no_argument, NULL, 'h' },
         { "graph-file",  no_argument, NULL, 'g' },
@@ -22,6 +23,7 @@ static const struct option longopts[] = {
         { "id_string",   no_argument, NULL, 'n' },
         { "window_size", no_argument, NULL, 'w' },
         { "cutoff", no_argument, NULL, 'e'},
+        { "prune", no_argument, NULL, 'p'},
         
 };
 
@@ -55,6 +57,7 @@ static void parse_pop_phaser_options( int argc, char** argv ) {
                 case 'n': arg >> opt::id_string; break;
                 case 'w': arg >> opt::window_size; break;
                 case 'e': arg >> opt::cutoff; break;
+                case 'p': arg >> opt::prune; break;
 
                 }
         }
@@ -235,7 +238,8 @@ void run_pop_phaser( int argc, char** argv ) {
 	//pdict.hap_random_initialization();
 	init_hic_pop_matrix( diff_matrix, num_matrix, pdict, hic_vgraph, centromere_pos );
 
-        solver_recursive_pop( hic_vgraph, pdict, num_matrix, diff_matrix, opt::window_size, opt::cutoff );
+        //solver_recursive_pop( hic_vgraph, pdict, num_matrix, diff_matrix, opt::window_size, opt::cutoff, opt::prune );
+        greedy_cut( hic_vgraph, pdict, num_matrix, diff_matrix, opt::window_size, opt::cutoff, opt::prune );
         //no_switch( hic_vgraph, pdict, num_matrix, diff_matrix, opt::window_size, opt::cutoff );
 	
 	///////////////////////////////////////////////////////////////

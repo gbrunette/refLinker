@@ -1,7 +1,9 @@
 #include "mc_solver.h"
 #include <omp.h>
+#include <bits/stdc++.h> 
+#include <tuple>
 #define NUM_THREADS 8
-
+ 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void solver( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<double> diff_matrix, map_matrix<int> num_matrix_second ) {
 	int t = clock();
@@ -57,10 +59,12 @@ void solver_recursive( std::unordered_map<std::string,variant_node>& var_dict, c
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff, double prune ) {
+void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff, double prune ) {
     
     static const std::size_t length = pdict.num_paired;
+
+    std::vector<int> flip_range(length);
+    
 
     int bkp = 0;
     map_matrix<double> diff_matrix_saved(length);
@@ -74,8 +78,7 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
     num_matrix_saved = num_matrix;
 
     length_cutoff_nmatrix2( pdict, diff_matrix_saved, num_matrix, num_matrix_saved, prune);
-
-    int max_gap = 0;
+    
     int max_loop = 2000;
     int count, prior_count;
     int window = window_size;
@@ -83,42 +86,18 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
     int max_window = 0;
     double min_switch = 0;
     double loop_min;
-    bool global;
     bool long_range = true;
-    
-    
+
     count = 1e6;
     prior_count = count;
     //double cutoff = -10.0;
-
 
     for (int k = 0; k < 5000; k++) {
         max_window = 0;
         min_switch = 0;
         loop_min = 0;
         window = window_size;
-        global = false;
-/*
 
-        while ( window > 0) {
-            block_flip_recursive_var_range( pdict, num_matrix_cutoff, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
-            if (loop_min <= min_switch) { min_switch = loop_min; max_window = window; global = false; } 
-            if (window > 20) { window = window - 20; }
-            //if (window > 200 ) { window = window - 20; }
-            else { window = window - 1; }
-            count = 1e6;
-            prior_count = count;
-        }
-
-        window = (int)pdict.num_paired/2;
-
-        while ( window > window_size ) {
-            //block_flip_recursive_var_range( pdict, num_matrix, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
-            block_flip_recursive_var_range( pdict, num_matrix_cutoff, window, count, pop_weight, diff_matrix, 0, bkp, false, loop_min );
-            if (loop_min < min_switch) { min_switch = loop_min; max_window = window; global = false; } 
-            window = (int)window/2;
-        }
-*/
 
         if ( long_range == true ) {
 
@@ -126,7 +105,7 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
 
             #pragma omp parallel for num_threads(8)
             for (int i=0; i<90; i++) {
-                    best_switch[i]=calculate_flipE( pdict, num_matrix_cutoff, ((i+1)*20+200), pop_weight, diff_matrix );
+                    best_switch[i]=calculate_flipE( pdict, num_matrix_cutoff, ((i+1)*20+200), pop_weight, diff_matrix, flip_range );
                     int tid = omp_get_thread_num();
                     //printf("The thread %d  executes i = %d\n", tid, i);
             }
@@ -139,7 +118,7 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
 
             #pragma omp parallel for num_threads(8)
             for (int i=0; i<200; i++) {
-                    best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix );
+                    best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix, flip_range );
                     //int tid = omp_get_thread_num();
                     //printf("The thread %d  executes i = %d\n", tid, i);
             }
@@ -158,14 +137,14 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
 
 
             while ( window > window_size ) {
-                window = (int)window/2;
+                window = (int)3*window/4;
                 large_scale.push_back(window);
                 best_switch3.push_back(0.0);
             }
 
             #pragma omp parallel for num_threads(8)
             for (int i=0; i<large_scale.size(); i++) {
-                    best_switch3[i]=calculate_flipE( pdict, num_matrix_cutoff, large_scale[i], pop_weight, diff_matrix );
+                    best_switch3[i]=calculate_flipE( pdict, num_matrix_cutoff, large_scale[i], pop_weight, diff_matrix, flip_range );
                     //int tid = omp_get_thread_num();
                     //printf("The thread %d  executes i = %d\n", tid, i);
             }
@@ -174,18 +153,15 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
             auto it3 = std::min_element(std::begin(best_switch3), std::end(best_switch3));
             auto min_index3 = std::distance(std::begin(best_switch3), it3);
 
-            if (min3 < min) { min_switch = min3; max_window = large_scale[min_index3]; }
+            if (min3 < min_switch) { min_switch = min3; max_window = large_scale[min_index3]; }
         }
 
         else {
-
-            std::vector<double> best_switch2(200, 0.0);
+            std::vector<double> best_switch2(48, 0.0);
 
             #pragma omp parallel for num_threads(8)
-            for (int i=0; i<200; i++) {
-                    best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix );
-                    //int tid = omp_get_thread_num();
-                    //printf("The thread %d  executes i = %d\n", tid, i);
+            for (int i=0; i<48; i++) {
+                    best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix, flip_range );
             }
 
             double min2 = *min_element(best_switch2.begin(), best_switch2.end());
@@ -194,40 +170,269 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
 
             min_switch = min2;
             max_window = int(min_index2)+1;
-
         }
 
-
-        if ( max_window == 1 ) { long_range = false; }
+        //if ( max_window == 1  ) {  long_range = false;  }
         
-
-/*
-        int pow2 = (int)log2(pdict.num_paired);
-        std::vector<double> best_switch2(pow2+1);
-
-        #pragma omp parallel for
-        for (int i=0; i<pow2; i++) {
-                best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, (int)pdict.num_paired/((int)pow((double)2, (double) i)), pop_weight, diff_matrix );
-        }
-
-        double min2 = *min_element(best_switch2.begin(), best_switch2.end());
-        auto it2 = std::min_element(std::begin(best_switch2), std::end(best_switch2));
-        auto min_index2 = std::distance(std::begin(best_switch2), it2);
-
-        if (min2 < min) { min_switch = min2; max_window = (int)pdict.num_paired/((int)pow((double)2, (double) min_index2)); }
-        else { min_switch = min; max_window = min_index*20; }
-*/
-        
-        
-
         if ( min_switch > cutoff ) { k = 10000; }
-        cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << global << endl; 
-        if ( global == false && min_switch < cutoff ) { block_flip_recursive_var_range( pdict, num_matrix_cutoff, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
+        cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << endl; 
+        //if ( min_switch < cutoff ) { block_flip_recursive_var_range( pdict, num_matrix_cutoff, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
+
+
+        std::vector< tuple<double, int, int> > BestFlips(pdict.num_paired);
+
+
+        for (int i = 0; i < pdict.num_paired; i++ ) {
+            BestFlips.push_back( std::make_tuple( pdict.switchE[i], i, flip_range[i]) ); 
+        }
+
+        sort(BestFlips.begin(), BestFlips.end());
+
+        for (int i = 0; i < 100; i++ ) {
+            
+            double current_switchE = get<0>(BestFlips[0]);
+            int flip_pos = get<1>(BestFlips[0]);
+            int flip_range = get<2>(BestFlips[0]);
+            
+            
+            if ((current_switchE < cutoff) && (current_switchE < 0.75*min_switch) ) {
+                
+                for (int j = flip_pos; j < flip_pos+flip_range; j++) { 
+
+                    pdict.haplotype[j] = -1*pdict.haplotype[j];
+
+                    BestFlips.erase(std::remove_if(BestFlips.begin(), 
+                        BestFlips.end(),
+                        [&j](const tuple<double, int, int>& t){
+                        return ( (get<1>(t) == j) || ( (get<1>(t) <= j ) && ( (get<1>(t)+get<2>(t)) >= j ) )) ;
+                        }), BestFlips.end());
+
+                    for (auto const &ent1 : num_matrix_cutoff.mat[j]) {
+                        auto const &m = ent1.first;
+                        
+                        BestFlips.erase(std::remove_if(BestFlips.begin(), 
+                        BestFlips.end(),
+                        [&m](const tuple<double, int, int>& t){
+                        return ( (get<1>(t) == m) || ( (get<1>(t) <= m) && ( (get<1>(t)+get<2>(t)) >= m ) )) ;
+                        }), BestFlips.end());
+                        
+                    }
+                }
+
+                cout << "Flip_pos" << "\t" << flip_pos << "\t" << "range" << "\t" << flip_range << "\t" << "switchE" << "\t" << current_switchE << "\t" << BestFlips.size() << endl;
+            }
+
+        }
+
+
+        for ( int i = 0; i < pdict.num_paired; i++ ) { pdict.switchE[i] = 1.0; } //Resetting the switchE vector
+    }
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+double calculateOldCut( coord_dictionary pdict, set<int> S1, set<int> S2, vector<int> loop_hap, map_matrix<int> nmatrix, map_matrix<double> diff_matrix ) {
+        set<int>::iterator itr;
+        double switchE = 0.0;
+
+        //Calculating the switching energy of the first block flip
+
+        for ( int i = 0; i < pdict.num_paired; i++ ) {
+            for ( auto const &ent1 : nmatrix.mat[i] ) {
+                auto const &m = ent1.first;
+                switchE += 2.0*loop_hap[i]*loop_hap[m]*diff_matrix(i,m);
+            }   
+        }
+
+    return  switchE;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+double calculateCut( coord_dictionary& pdict, set<int> vtcs, set<int> S1, set<int> S2, vector<int> loop_hap, map_matrix<int> nmatrix, map_matrix<double> diff_matrix ) {
+
+    int min_pos, max_pos, site_diff, pos;
+    set<int>::iterator it = vtcs.begin(); 
+    set<int>::iterator it1 = S1.begin();
+    set<int>::iterator it2 = S2.begin();
+    double minE = 0.0;
+    double maxE = 0.0;
+    double factor, w1, w2, diff_energy;
+    int pop_weight = 4e5;
+
+    for (int j = 0; j < vtcs.size(); j++) {
+
+            int i = *it; 
+
+            int init_i = loop_hap[i]; 
+            
+            set<int>::iterator it1 = S1.begin();
+            set<int>::iterator it2 = S2.begin();
+
+            double w1 = 0.0;     
+            
+            //for (auto const &ent1 : nmatrix.mat[i]) {
+            //    auto const &m = ent1.first;     
+            for ( int k = 0; k < S1.size(); k++ ) {  
+                int m = *it1; 
+                w1 += -1.0*init_i*loop_hap[m]*diff_matrix(i,m);
+                it1++;
+            }
+
+            for ( int k = 0; k < S2.size(); k++ ) {  
+                int m = *it2; 
+                w2 += -1.0*init_i*loop_hap[m]*diff_matrix(i,m);
+                it2++;
+            }
+
+            diff_energy = w1 - w2;
+
+            pdict.switchE[j] = diff_energy;
+
+            // if (i < pdict.num_paired-1) {
+            //     site_diff = abs(pdict.sorted_paired_positions[i]-pdict.sorted_paired_positions[i+1]);
+            //     factor = (double)site_diff/pop_weight;
+            //     initial_energy += -1.0*exp(-1.0*factor)*init_i*loop_hap[i+1]*pdict.pop_hap[i]*pdict.pop_hap[i+1];
+            // }
+            
+            //double final_energy = -1*initial_energy;
+            //double diff_energy = final_energy - initial_energy;
+
+            if ( diff_energy < minE ) { minE = diff_energy; min_pos = i; } 
+            if ( diff_energy > maxE ) { maxE = diff_energy; max_pos = i; }
+
+            it++;
+
+    }
+
+    if ( abs(minE) > maxE ) { return -1*min_pos; }
+    else { return max_pos; }
+ 
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff, double prune ) {
+    
+    static const std::size_t length = pdict.num_paired;
+    std::vector<int> flip_range(length);
+
+    int bkp = 0;
+    map_matrix<double> diff_matrix_saved(length);
+
+    diff_matrix_saved = diff_matrix;
+
+    map_matrix<int> num_matrix_cutoff(length);
+    map_matrix<int> num_matrix_saved(length);
+
+    num_matrix_cutoff = num_matrix;
+    num_matrix_saved = num_matrix;
+
+    length_cutoff_nmatrix2( pdict, diff_matrix_saved, num_matrix, num_matrix_saved, prune);
+    
+    int max_loop = 2000;
+    int count, prior_count;
+    int window = window_size;
+    int pop_weight = 4e5;
+    int max_window = 0;
+    double min_switch = 0;
+    double loop_min;
+    bool long_range = true;
+
+    count = 1e6;
+    prior_count = count;
+    //double cutoff = -10.0;
+
+    for (int k = 0; k < 5000; k++) {
+        max_window = 0;
+        min_switch = 0;
+        loop_min = 0;
+        window = window_size;
+
+
+        if ( long_range == true ) {
+
+            std::vector<double> best_switch(90, 0.0);
+
+            #pragma omp parallel for num_threads(8)
+            for (int i=0; i<90; i++) {
+                    best_switch[i]=calculate_flipE( pdict, num_matrix_cutoff, ((i+1)*20+200), pop_weight, diff_matrix, flip_range );
+                    int tid = omp_get_thread_num();
+                    //printf("The thread %d  executes i = %d\n", tid, i);
+            }
+
+            double min = *min_element(best_switch.begin(), best_switch.end());
+            auto it = std::min_element(std::begin(best_switch), std::end(best_switch));
+            auto min_index = std::distance(std::begin(best_switch), it);
+
+            std::vector<double> best_switch2(200, 0.0);
+
+            #pragma omp parallel for num_threads(8)
+            for (int i=0; i<200; i++) {
+                    best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix, flip_range );
+                    //int tid = omp_get_thread_num();
+                    //printf("The thread %d  executes i = %d\n", tid, i);
+            }
+
+            double min2 = *min_element(best_switch2.begin(), best_switch2.end());
+            auto it2 = std::min_element(std::begin(best_switch2), std::end(best_switch2));
+            auto min_index2 = std::distance(std::begin(best_switch2), it2);
+
+            if (min2 < min) { min_switch = min2; max_window = int(min_index2)+1; }
+            else { min_switch = min; max_window = (int)min_index*20+220;}
+
+
+            window = (int)pdict.num_paired;
+            std::vector<int> large_scale;
+            std::vector<double> best_switch3;
+
+
+            while ( window > window_size ) {
+                window = (int)3*window/4;
+                large_scale.push_back(window);
+                best_switch3.push_back(0.0);
+            }
+
+            #pragma omp parallel for num_threads(8)
+            for (int i=0; i<large_scale.size(); i++) {
+                    best_switch3[i]=calculate_flipE( pdict, num_matrix_cutoff, large_scale[i], pop_weight, diff_matrix, flip_range );
+                    //int tid = omp_get_thread_num();
+                    //printf("The thread %d  executes i = %d\n", tid, i);
+            }
+
+            double min3 = *min_element(best_switch3.begin(), best_switch3.end());
+            auto it3 = std::min_element(std::begin(best_switch3), std::end(best_switch3));
+            auto min_index3 = std::distance(std::begin(best_switch3), it3);
+
+            if (min3 < min_switch) { min_switch = min3; max_window = large_scale[min_index3]; }
+        }
+
+        else {
+            std::vector<double> best_switch2(48, 0.0);
+
+            #pragma omp parallel for num_threads(8)
+            for (int i=0; i<48; i++) {
+                    best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix, flip_range );
+            }
+
+            double min2 = *min_element(best_switch2.begin(), best_switch2.end());
+            auto it2 = std::min_element(std::begin(best_switch2), std::end(best_switch2));
+            auto min_index2 = std::distance(std::begin(best_switch2), it2);
+
+            min_switch = min2;
+            max_window = int(min_index2)+1;
+        }
+
+        if ( max_window == 1  ) {  long_range = false;  }
+        
+        if ( min_switch > cutoff ) { k = 10000; }
+        cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << endl; 
+        //if ( min_switch < cutoff ) { block_flip_recursive_var_range( pdict, num_matrix_cutoff, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
         //else { switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, true, min_switch ); }
     }
 };
 
-double calculate_flipE( coord_dictionary pdict, map_matrix<int> nmatrix, int range, int pop_weight, map_matrix<double> diff_matrix ) {
+double calculate_flipE( coord_dictionary& pdict, map_matrix<int> nmatrix, int range, int pop_weight, map_matrix<double> diff_matrix, vector<int>& flip_range ) {
        
         double factor;
         int dist = 0;
@@ -251,8 +456,6 @@ double calculate_flipE( coord_dictionary pdict, map_matrix<int> nmatrix, int ran
 
         double switch_min = 0; 
 
-        
-        int gap = 0;
         
 
         //Creating the first block flip
@@ -282,7 +485,7 @@ double calculate_flipE( coord_dictionary pdict, map_matrix<int> nmatrix, int ran
 
         first_switchE += save_pop;
 
-        pdict.switchE[0] = first_switchE;
+        if (first_switchE < pdict.switchE[0]) { pdict.switchE[0] = first_switchE; flip_range[0] = range; }
 
         if (first_switchE < min_switchE) {
             min_switchE = first_switchE;
@@ -292,9 +495,6 @@ double calculate_flipE( coord_dictionary pdict, map_matrix<int> nmatrix, int ran
 
         //Calculating the subsequent block-flipping energies
         for ( int i = 1; i < (pdict.num_paired-range); i++ ) {
-
-            gap = 0;
-            
 
             last_pos = i+range-1;
 
@@ -346,16 +546,11 @@ double calculate_flipE( coord_dictionary pdict, map_matrix<int> nmatrix, int ran
             factor = (double)dist/pop_weight;
             save_pop = 2.0*exp(-1.0*factor)*pdict.haplotype[last_pos]*pdict.haplotype[last_pos+1]*pdict.pop_hap[last_pos]*pdict.pop_hap[last_pos+1];
             loop_switchE += save_pop;
-            pdict.switchE[i] = loop_switchE;
+            if ( loop_switchE < pdict.switchE[i] ) { pdict.switchE[i] = loop_switchE; flip_range[i] = range; }
 
             bin_distance = pdict.sorted_paired_positions[last_pos] - pdict.sorted_paired_positions[i];
             bin_density = (double)range/bin_distance;
 
-            for (int j = i+1; j < last_pos; j++) {
-
-                if ( (pdict.sorted_paired_positions[j] - pdict.sorted_paired_positions[j-1]) > gap) 
-                    { gap = pdict.sorted_paired_positions[j] - pdict.sorted_paired_positions[j-1];}
-            }
 
             if ( loop_switchE < min_switchE ) {
                 min_switchE = loop_switchE;
@@ -468,13 +663,6 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
         int pair_dist;
         int min_pos;
 
-        int bin_distance;
-        double bin_density;
-
-        
-        int gap = 0;
-        
-
         //Creating the first block flip
         for ( int i = 0; i < range; i++ )
         {
@@ -513,7 +701,7 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
         //Calculating the subsequent block-flipping energies
         for ( int i = 1; i < (pdict.num_paired-range); i++ ) {
 
-            gap = 0;
+          
             
 
             last_pos = i+range-1;
@@ -568,21 +756,6 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
             loop_switchE += save_pop;
             pdict.switchE[i] = loop_switchE;
 
-            bin_distance = pdict.sorted_paired_positions[last_pos] - pdict.sorted_paired_positions[i];
-            bin_density = (double)range/bin_distance;
-
-            for (int j = i+1; j < last_pos; j++) {
-
-                if ( (pdict.sorted_paired_positions[j] - pdict.sorted_paired_positions[j-1]) > gap) 
-                    { gap = pdict.sorted_paired_positions[j] - pdict.sorted_paired_positions[j-1];}
-            }
-            
-            
-            
-
-            //if ( loop_switchE < min_switchE && bin_density > 0.0009 ) {
-
-            //if ( loop_switchE < min_switchE && gap <= 100000) {
             if ( loop_switchE < min_switchE ) {
                 min_switchE = loop_switchE;
                 min_haplotype = loop_haplotype;
@@ -593,8 +766,8 @@ static void block_flip_recursive_var_range( coord_dictionary& pdict, map_matrix<
         switch_min = min_switchE;
         //cout << "block flip var range loop_switchE" << "\t" << loop_switchE << "\t" << "min_switchE" << "\t" << min_switchE << "\t" << switch_min << endl;
         //cout << "min switching energy" << "\t" << min_switchE << "\t" << min_pos << endl;
-        if ( switch_hap == true ) { pdict.haplotype = min_haplotype; prior = prior-1; bkp = min_pos; cout << "switch pos" << "\t" << pdict.sorted_paired_positions[min_pos] << "\t"
-        << "gap" << "\t" << gap << endl; }
+        if ( switch_hap == true ) { pdict.haplotype = min_haplotype; prior = prior-1; bkp = min_pos; cout << "switch pos" << "\t" << pdict.sorted_paired_positions[min_pos] 
+        <<  endl; }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
