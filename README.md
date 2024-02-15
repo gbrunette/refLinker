@@ -1,2 +1,2 @@
 # refLinker
-modified phasing method to leverage reference-based phasing and Hi-C
+Chromosome-length haplotype determination from Hi-C and external reference panels
