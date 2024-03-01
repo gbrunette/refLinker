@@ -1,5 +1,0 @@
-pysam
-numpy
-pandas
-matplotlib
-PyVCF
