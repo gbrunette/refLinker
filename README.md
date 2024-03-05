@@ -17,7 +17,7 @@ This generates map from reads to variants, written to the file `graph_variant_{s
 
 Chromosome-length haplotype inference is then performed using the reads-to-variants map and statistical phasing haplotype with the following command:
 
-`linker pop -v {statistical haplotype} -g graph_variant_{sample name}_{chrom}.dat -c {chrom} -e -10.0 -p 0.999`
+`linker pop -v {statistical haplotype}.vcf.gz -g graph_variant_{sample name}_{chrom}.dat -c {chrom} -e -10.0 -p 0.999`
 
 Where the arguments `-e` and `-p` specify the block-flipping penalty and linkage pruning cut-offs respectively. `reflinker pop` writes whole-chromosome haplotype to the file `pop_hap_solution_{sample name}_{chrom}.dat`, where column 1 corresponds to variant position, column 4 corresponds to refLinker haplotype, and column 5 corresponds to the initial (e.g. EAGLE2) haplotype assignment.  
 
