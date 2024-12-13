@@ -7,7 +7,8 @@ Chromosome-length haplotype determination from Hi-C and external reference panel
 
 `refLinker` then introduces perturbations to linkage assignment that maximize the number of observed intra-homolog Hi-C contacts using steepest descent approaches. 
 
-[github_fig.pdf](https://github.com/user-attachments/files/18131149/github_fig.pdf)
+![image](https://github.com/user-attachments/assets/87fb40a0-7f0d-407a-a767-5e7d2035dfe6)
+
 
 The resulting linkage assignment represents the whole-chromosome haplotype. Steps to run `refLinker` are outlined below.
 
