@@ -3,6 +3,12 @@ Chromosome-length haplotype determination from Hi-C and external reference panel
 
 ## Installation
 
+`refLinker` is available as a compiled release: https://github.com/gbrunette/refLinker/releases/tag/v1.0 and as a Docker image: https://hub.docker.com/r/gregbrun/reflinker_compile_amd64
+
+Alternatively, we provide the steps for building `refLinker` below:
+
+## Building `refLinker`
+
 This code requires bamtools, htslib, c++11, and zlib libraries.
 
 htslib: https://github.com/samtools/htslib
