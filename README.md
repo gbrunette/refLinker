@@ -13,6 +13,8 @@ This code requires bamtools, htslib, c++11, and zlib libraries.
 
 htslib: https://github.com/samtools/htslib
 bamtools: https://github.com/pezmaster31/bamtools
+
+
 From the linker directory run build.sh or install manually:
 
 Installing htslib locally
