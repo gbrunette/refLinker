@@ -115,6 +115,27 @@ def calculate_accuracy_hcc1954(test_hap, chrom):
     
     return accuracy, test_hap
 
+def calculate_accuracy_recovered_hcc1954(test_hap, chrom):
+    test_hap["pos"] = test_hap["pos"]+1
+    test_hap = test_hap[test_hap["hap"]!=0]
+    
+    truth_path = "./cell_line_data/ground_truth/hap_full_scaffold_nov10_BL1954_2000_"
+    truth = pd.read_csv(truth_path+chrom+'.dat', sep='\t', header=None)
+    truth = truth[(truth[5]!=0)]
+    truth[2]=truth[2]+1
+    
+    overlap = list(set(test_hap["pos"]) & set(truth[2]))
+    test_hap = test_hap[test_hap["pos"].isin(overlap)]
+    truth = truth[truth[2].isin(overlap)]
+    
+    test_hap["mlinker_hap"] = truth[5].values
+    test_hap["agreement"] = [i*j for i,j in zip(test_hap["hap"].values, test_hap["mlinker_hap"].values)]
+    accuracy = max(list(test_hap["agreement"]).count(1),list(test_hap["agreement"]).count(-1))/len(list(test_hap["agreement"]))
+    print("refLinker recovered accuracy", chrom, accuracy)
+    
+    return accuracy, test_hap
+
+
 def calculate_accuracy_rpe1(test_hap, chrom):
     test_hap[1] = test_hap[1]+1
     test_hap = test_hap[test_hap[4]!=0]
@@ -129,6 +150,23 @@ def calculate_accuracy_rpe1(test_hap, chrom):
     print("refLinker accuracy", chrom, accuracy)
     
     return accuracy, test_hap
+
+def calculate_accuracy_recovered_rpe1(test_hap, chrom):
+    test_hap["pos"] = test_hap["pos"]+1
+    test_hap = test_hap[test_hap["hap"]!=0]
+    
+    chrom_truth = rpe1_truth[rpe1_truth["chr"]==chrom].copy()
+    overlap = list(set(test_hap["pos"]) & set(chrom_truth["pos"]))
+    test_hap = test_hap[test_hap["pos"].isin(overlap)]
+    chrom_truth = chrom_truth[chrom_truth["pos"].isin(overlap)]
+    test_hap["mlinker_hap"] = chrom_truth["haplotype_bulkSeq"].values
+    test_hap["agreement"] = [i*j for i,j in zip(test_hap["hap"].values, test_hap["mlinker_hap"].values)]
+    accuracy = max(list(test_hap["agreement"]).count(1), list(test_hap["agreement"]).count(-1))/len(list(test_hap["agreement"]))
+    print("refLinker recovered accuracy", chrom, accuracy)
+    
+    return accuracy, test_hap
+    
+    
 
 def calculate_eagle2_accuracy_rpe1(test_hap, chrom):
     test_hap[1] = test_hap[1]+1
