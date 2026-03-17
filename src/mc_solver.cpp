@@ -1,9 +1,9 @@
 #include "mc_solver.h"
 #include <omp.h>
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
 #include <tuple>
 #define NUM_THREADS 8
- 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void solver( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<double> diff_matrix, map_matrix<int> num_matrix_second ) {
 	int t = clock();
@@ -60,11 +60,10 @@ void solver_recursive( std::unordered_map<std::string,variant_node>& var_dict, c
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_dictionary& pdict, map_matrix<int> num_matrix, map_matrix<double> diff_matrix, int window_size, double cutoff, double prune ) {
-    
+
     static const std::size_t length = pdict.num_paired;
 
     std::vector<int> flip_range(length);
-    
 
     int bkp = 0;
     map_matrix<double> diff_matrix_saved(length);
@@ -78,24 +77,27 @@ void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_d
     num_matrix_saved = num_matrix;
 
     length_cutoff_nmatrix2( pdict, diff_matrix_saved, num_matrix, num_matrix_saved, prune);
-    
+
     int max_loop = 2000;
     int count, prior_count;
     int window = window_size;
     int pop_weight = 4e5;
     int max_window = 0;
     double min_switch = 0;
-    double loop_min;
+    double loop_min, min, min2, min3;
     bool long_range = true;
 
     count = 1e6;
     prior_count = count;
     //double cutoff = -10.0;
 
-    for (int k = 0; k < 5000; k++) {
-        max_window = 0;
+    for (int k = 0; k < 500; k++) {
+        max_window = -1;
         min_switch = 0;
         loop_min = 0;
+        min = 0.0;
+        min2 = 0.0;
+        min3 = 0.0;
         window = window_size;
 
 
@@ -110,7 +112,7 @@ void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_d
                     //printf("The thread %d  executes i = %d\n", tid, i);
             }
 
-            double min = *min_element(best_switch.begin(), best_switch.end());
+            min = *min_element(best_switch.begin(), best_switch.end());
             auto it = std::min_element(std::begin(best_switch), std::end(best_switch));
             auto min_index = std::distance(std::begin(best_switch), it);
 
@@ -123,7 +125,7 @@ void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_d
                     //printf("The thread %d  executes i = %d\n", tid, i);
             }
 
-            double min2 = *min_element(best_switch2.begin(), best_switch2.end());
+            min2 = *min_element(best_switch2.begin(), best_switch2.end());
             auto it2 = std::min_element(std::begin(best_switch2), std::end(best_switch2));
             auto min_index2 = std::distance(std::begin(best_switch2), it2);
 
@@ -149,7 +151,7 @@ void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_d
                     //printf("The thread %d  executes i = %d\n", tid, i);
             }
 
-            double min3 = *min_element(best_switch3.begin(), best_switch3.end());
+            min3 = *min_element(best_switch3.begin(), best_switch3.end());
             auto it3 = std::min_element(std::begin(best_switch3), std::end(best_switch3));
             auto min_index3 = std::distance(std::begin(best_switch3), it3);
 
@@ -164,7 +166,7 @@ void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_d
                     best_switch2[i]=calculate_flipE( pdict, num_matrix_cutoff, i+1, pop_weight, diff_matrix, flip_range );
             }
 
-            double min2 = *min_element(best_switch2.begin(), best_switch2.end());
+            min2 = *min_element(best_switch2.begin(), best_switch2.end());
             auto it2 = std::min_element(std::begin(best_switch2), std::end(best_switch2));
             auto min_index2 = std::distance(std::begin(best_switch2), it2);
 
@@ -172,36 +174,45 @@ void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_d
             max_window = int(min_index2)+1;
         }
 
-        //if ( max_window == 1  ) {  long_range = false;  }
-        
         if ( min_switch > cutoff ) { k = 10000; }
-        cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << endl; 
+        cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << endl;
         //if ( min_switch < cutoff ) { block_flip_recursive_var_range( pdict, num_matrix_cutoff, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
 
 
         std::vector< tuple<double, int, int> > BestFlips(pdict.num_paired);
 
-
-        for (int i = 0; i < pdict.num_paired; i++ ) {
-            BestFlips.push_back( std::make_tuple( pdict.switchE[i], i, flip_range[i]) ); 
-        }
+	//bool valid_flip = false;
+	for (int i = 0; i < pdict.num_paired; i++ ) {
+	        //if ( flip_range[i] > 0 ) {
+		BestFlips.push_back( std::make_tuple( pdict.switchE[i], i, flip_range[i]) );
+		//}
+		//else {
+		 // BestFlips.push_back( std::make_tuple( cutoff, i, flip_range[i]) );
+		//}
+       		//if ( (flip_range[i] > 0) && (pdict.switchE[i] < cutoff) ) {
+			//valid_flip = true;
+		//}
+	}
 
         sort(BestFlips.begin(), BestFlips.end());
 
+	min_switch = get<0>(BestFlips[0]);
+
+	if (min_switch >= cutoff) { k = 10000; }
+	//if ( valid_flip == false ) { k = 10000; }
+
         for (int i = 0; i < 100; i++ ) {
-            
             double current_switchE = get<0>(BestFlips[0]);
             int flip_pos = get<1>(BestFlips[0]);
             int flip_range = get<2>(BestFlips[0]);
-            
-            
+
             if ((current_switchE < cutoff) && (current_switchE < 0.75*min_switch) ) {
-                
-                for (int j = flip_pos; j < flip_pos+flip_range; j++) { 
+
+                for (int j = flip_pos; j < flip_pos+flip_range; j++) {
 
                     pdict.haplotype[j] = -1*pdict.haplotype[j];
 
-                    BestFlips.erase(std::remove_if(BestFlips.begin(), 
+                    BestFlips.erase(std::remove_if(BestFlips.begin(),
                         BestFlips.end(),
                         [&j](const tuple<double, int, int>& t){
                         return ( (get<1>(t) == j) || ( (get<1>(t) <= j ) && ( (get<1>(t)+get<2>(t)) >= j ) )) ;
@@ -209,15 +220,15 @@ void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_d
 
                     for (auto const &ent1 : num_matrix_cutoff.mat[j]) {
                         auto const &m = ent1.first;
-                        
-                        BestFlips.erase(std::remove_if(BestFlips.begin(), 
+                        BestFlips.erase(std::remove_if(BestFlips.begin(),
                         BestFlips.end(),
                         [&m](const tuple<double, int, int>& t){
                         return ( (get<1>(t) == m) || ( (get<1>(t) <= m) && ( (get<1>(t)+get<2>(t)) >= m ) )) ;
                         }), BestFlips.end());
-                        
                     }
                 }
+
+                //if (flip_range == 0) { pdict.haplotype[flip_pos] = -1*pdict.haplotype[flip_pos]; counter++;}
 
                 cout << "Flip_pos" << "\t" << flip_pos << "\t" << "range" << "\t" << flip_range << "\t" << "switchE" << "\t" << current_switchE << "\t" << BestFlips.size() << endl;
             }
@@ -227,6 +238,10 @@ void greedy_cut( std::unordered_map<std::string,variant_node>& var_dict, coord_d
 
         for ( int i = 0; i < pdict.num_paired; i++ ) { pdict.switchE[i] = 1.0; } //Resetting the switchE vector
     }
+int prior = 1e6;
+
+block_flip_recursive_var_range( pdict, num_matrix_cutoff, 1, prior, pop_weight, diff_matrix, 0, bkp, false, min_switch );
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -423,17 +438,17 @@ void solver_recursive_pop( std::unordered_map<std::string,variant_node>& var_dic
             max_window = int(min_index2)+1;
         }
 
-        if ( max_window == 1  ) {  long_range = false;  }
+        //if ( max_window == 1  ) {  long_range = false;  }
         
         if ( min_switch > cutoff ) { k = 10000; }
         cout << "loop" << "\t" << k << "\t" << "max_win" << "\t" << max_window << "\t" << min_switch << "\t" << endl; 
-        //if ( min_switch < cutoff ) { block_flip_recursive_var_range( pdict, num_matrix_cutoff, max_window, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
+        if ( min_switch < cutoff ) { block_flip_recursive_var_range( pdict, num_matrix_cutoff, max_window+1, count, pop_weight, diff_matrix, 0, bkp, true, min_switch ); }
         //else { switchE_recursive_pop( pdict, num_matrix, pop_weight, diff_matrix, cutoff, bkp, true, min_switch ); }
     }
 };
 
 double calculate_flipE( coord_dictionary& pdict, map_matrix<int> nmatrix, int range, int pop_weight, map_matrix<double> diff_matrix, vector<int>& flip_range ) {
-       
+
         double factor;
         int dist = 0;
         double min_switchE = 0.0;
@@ -456,7 +471,6 @@ double calculate_flipE( coord_dictionary& pdict, map_matrix<int> nmatrix, int ra
 
         double switch_min = 0; 
 
-        
 
         //Creating the first block flip
         for ( int i = 0; i < range; i++ )
@@ -475,7 +489,7 @@ double calculate_flipE( coord_dictionary& pdict, map_matrix<int> nmatrix, int ra
                 {
                     first_switchE += 2.0*pdict.haplotype[i]*pdict.haplotype[m]*diff_matrix(i,m);
                 }
-            }   
+            }
         }
 
 //Adding the population term
@@ -537,7 +551,7 @@ double calculate_flipE( coord_dictionary& pdict, map_matrix<int> nmatrix, int ra
                 if (m >= i) {
                     if (m < last_pos) {
                         loop_switchE += 2.0*pdict.haplotype[i-1]*pdict.haplotype[m]*diff_matrix(i-1,m);
-                    }                
+                    }
                 }
             }
 
